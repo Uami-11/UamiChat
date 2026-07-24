@@ -27,7 +27,7 @@ def get_user_by_username(username: str):
     return None
 
 
-def create_user(username, hashed_password):
+def create_user(username: str, hashed_password: str):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
