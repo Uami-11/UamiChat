@@ -39,7 +39,9 @@ def create_user(username, hashed_password):
         ),
     )
 
+    conn.commit()
     row = cur.fetchone()
+    conn.close()
 
     if row:
         return models.User(
@@ -54,6 +56,7 @@ def get_user_by_id(id):
     cur.execute("SELECT * FROM users WHERE id=%s", (id,))
 
     row = cur.fetchone()
+    conn.close()
 
     if row:
         return models.User(id=id, username=row["username"], is_online=row["is_online"])
@@ -71,6 +74,8 @@ def set_user_online(user_id, status: bool):
             user_id,
         ),
     )
+    conn.commit()
+    conn.close()
 
 
 def save_message(sender_id, message, room_id=None, recipient_id=None):
@@ -78,11 +83,14 @@ def save_message(sender_id, message, room_id=None, recipient_id=None):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-        "INSERT INTO messages (sender_id, message, room_id, recipient_id) VALUES (%s, %s, %s, %s)",
+        "INSERT INTO messages (sender_id, message, room_id, recipient_id) VALUES (%s, %s, %s, %s) RETURNING message",
         (sender_id, message, room_id, recipient_id),
     )
 
+    conn.commit()
+
     row = cur.fetchone()
+    conn.close()
     if row:
         return row["message"]
 
@@ -92,11 +100,12 @@ def get_unread_dms(user_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-        "SELECT m.sender_id, m.message FROM users u JOIN messages m ON m.recipient_id = u.id WHERE m.is_read = FALSE AND u.id = %s",
+        "SELECT m.sender_id, m.message FROM messages m WHERE m.is_read = FALSE AND m.recipient_id = %s",
         (user_id,),
     )
 
     unread_list = cur.fetchall()
+    conn.close()
 
     return unread_list
 
@@ -106,9 +115,11 @@ def mark_message_read(user_id, sender_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-        "UPDATE messages m JOIN users u ON m.recipient_id = u.id SET m.is_read = TRUE WHERE u.id = %s AND m.sender_id = %s",
+        "UPDATE messages m SET m.is_read = TRUE WHERE m.recipient_id = %s AND m.sender_id = %s",
         (
             user_id,
             sender_id,
         ),
     )
+    conn.commit()
+    conn.close()
