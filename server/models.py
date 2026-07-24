@@ -12,7 +12,7 @@ class User:
 @dataclass
 class Room:
     id: int
-    roomname: str
+    room_name: str
     is_private: bool
     owner_id: int
 
@@ -23,6 +23,6 @@ class Message:
     sender_id: int
     room_id: int | None
     recipient_id: int | None
-    content: str
+    message: str
     is_read: bool
     created_at: datetime
