@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: uami
+      POSTGRES_DB: uamichat
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U uami -d uamichat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DB_URL: postgresql://uami@db:5432/uamichat
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8765"
+    ports:
+      - "8765:8765"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./server:/app/server
+
+volumes:
+  pgdata:
