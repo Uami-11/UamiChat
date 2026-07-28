@@ -27,6 +27,17 @@ def get_user_by_username(username: str):
     return None
 
 
+def get_password_hash(username: str):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT password_hash FROM users WHERE username=%s", (username,))
+    row = cur.fetchone()
+    conn.close()
+    if row:
+        return row[0]
+    return None
+
+
 def create_user(username: str, hashed_password: str):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
