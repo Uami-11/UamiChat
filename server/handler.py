@@ -1,7 +1,7 @@
 import json
 
-import auth
-import db
+from . import auth
+from . import db
 
 connected_clients = {}
 
@@ -23,7 +23,7 @@ def send_to_client(user_id, message: dict):
 
 
 def broadcast_to_room(room_id, message: dict, exclude_user_id=None):
-    import db as database
+    from . import db as database
     cur = database.get_connection().cursor()
     cur.execute("SELECT user_id FROM room_members WHERE room_id=%s", (room_id,))
     members = cur.fetchall()

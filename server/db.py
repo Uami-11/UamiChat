@@ -1,6 +1,6 @@
 import os
 
-import models
+from . import models
 import psycopg2
 from psycopg2.extras import RealDictCursor  # makes queries act like dictionaries
 

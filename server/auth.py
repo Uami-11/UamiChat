@@ -1,6 +1,6 @@
 import hashlib
 
-import db
+from . import db
 
 
 def hash_password(password):

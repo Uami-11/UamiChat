@@ -3,7 +3,7 @@ import os
 
 import websockets
 
-import handler
+from . import handler
 
 
 async def connection_handler(websocket):
