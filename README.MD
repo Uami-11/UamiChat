@@ -264,7 +264,7 @@ When you finish, open a PR into `dev` and message the group.
 
 ---
 
-### Person 1 — Server: Rooms
+### Paru Maharjan — Server: Rooms
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -342,7 +342,7 @@ You are adding new functions to existing files. Do not change any code that alre
 
 ---
 
-### Person 2 — Server: DMs + Invites
+### Bipana Khadka — Server: DMs + Invites
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -406,7 +406,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 
 ---
 
-### Person 3 — Server: Friends + Block
+### Suryansh Bikram Shah — Server: Friends + Block
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -490,7 +490,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 
 ---
 
-### Person 4 — Client: Commands + UI + Main
+### Subista Kunwar — Client: Commands + UI + Main
 
 **Your files:** `client/commands.py`, `client/ui.py`, `client/main.py`
 
