@@ -4,6 +4,7 @@ services:
     environment:
       POSTGRES_USER: uami
       POSTGRES_DB: uamichat
+      POSTGRES_HOST_AUTH_METHOD: trust
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql
