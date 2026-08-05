@@ -134,3 +134,146 @@ def mark_message_read(user_id, sender_id):
     )
     conn.commit()
     conn.close()
+
+def create_room(name, is_private, owner_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        """
+        INSERT INTO rooms (room_name, is_private, owner_id)
+        VALUES (%s, %s, %s)
+        RETURNING id, room_name, is_private, owner_id
+        """,
+        (name, is_private, owner_id),
+    )
+
+    conn.commit()
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return models.Room(
+            id=row["id"],
+            room_name=row["room_name"],
+            is_private=row["is_private"],
+            owner_id=row["owner_id"],
+        )
+
+
+def get_room_by_name(name):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        "SELECT * FROM rooms WHERE room_name = %s",
+        (name,),
+    )
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return models.Room(
+            id=row["id"],
+            room_name=row["room_name"],
+            is_private=row["is_private"],
+            owner_id=row["owner_id"],
+        )
+
+    return None
+
+
+def get_public_rooms():
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        "SELECT * FROM rooms WHERE is_private = FALSE"
+    )
+
+    rows = cur.fetchall()
+    conn.close()
+
+    rooms = []
+
+    for row in rows:
+        rooms.append(
+            models.Room(
+                id=row["id"],
+                room_name=row["room_name"],
+                is_private=row["is_private"],
+                owner_id=row["owner_id"],
+            )
+        )
+
+    return rooms
+
+
+def add_room_member(room_id, user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO room_members (room_id, user_id)
+        VALUES (%s, %s)
+        ON CONFLICT DO NOTHING
+        """,
+        (room_id, user_id),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def get_room_members(room_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        """
+        SELECT u.*
+        FROM users u
+        JOIN room_members rm
+        ON u.id = rm.user_id
+        WHERE rm.room_id = %s
+        """,
+        (room_id,),
+    )
+
+    rows = cur.fetchall()
+    conn.close()
+
+    members = []
+
+    for row in rows:
+        members.append(
+            models.User(
+                id=row["id"],
+                username=row["username"],
+                is_online=row["is_online"],
+            )
+        )
+
+    return members
+
+
+def is_room_member(room_id, user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM room_members
+        WHERE room_id = %s AND user_id = %s
+        """,
+        (room_id, user_id),
+    )
+
+    count = cur.fetchone()[0]
+    conn.close()
+
+    return count > 0
