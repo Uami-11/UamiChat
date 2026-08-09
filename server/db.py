@@ -139,18 +139,23 @@ def create_room(name, is_private, owner_id):
     conn = get_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    cur.execute(
-        """
-        INSERT INTO rooms (room_name, is_private, owner_id)
-        VALUES (%s, %s, %s)
-        RETURNING id, room_name, is_private, owner_id
-        """,
-        (name, is_private, owner_id),
-    )
+    try:
+        cur.execute(
+            """
+            INSERT INTO rooms (room_name, is_private, owner_id)
+            VALUES (%s, %s, %s)
+            RETURNING id, room_name, is_private, owner_id
+            """,
+            (name, is_private, owner_id),
+        )
 
-    conn.commit()
+        conn.commit()
 
-    row = cur.fetchone()
+        row = cur.fetchone()
+    except psycopg2.errors.UniqueViolation:
+        conn.rollback()
+        row = None
+
     conn.close()
 
     if row:
@@ -160,6 +165,8 @@ def create_room(name, is_private, owner_id):
             is_private=row["is_private"],
             owner_id=row["owner_id"],
         )
+
+    return None
 
 
 def get_room_by_name(name):

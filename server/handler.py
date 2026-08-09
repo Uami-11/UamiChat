@@ -182,6 +182,13 @@ async def handle_create_room(websocket, data, user_id):
         user_id,
     )
 
+    if room is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "room name already exists",
+        }))
+        return
+
     # Automatically add the creator as a member
     db.add_room_member(
         room.id,
