@@ -58,6 +58,50 @@ class TestRoomMessageHandler:
         assert "timestamp" in message
 
 
+class TestJoinRoomHandler:
+    async def test_join_public_room(self, fake_ws, monkeypatch):
+        room = models.Room(id=1, room_name="dev", is_private=False, owner_id=1)
+        added = []
+
+        monkeypatch.setattr(handler.db, "get_room_by_name", lambda name: room)
+        monkeypatch.setattr(
+            handler.db, "add_room_member", lambda room_id, user_id: added.append((room_id, user_id))
+        )
+
+        await handler.handle_join_room(fake_ws, {"name": "dev"}, 5)
+
+        assert added == [(1, 5)]
+        message = fake_ws.sent[-1]
+        assert message["type"] == "success"
+        assert message["message"] == "joined room"
+        assert message["room"]["id"] == 1
+
+    async def test_private_room_requires_invite(self, fake_ws, monkeypatch):
+        room = models.Room(id=1, room_name="secret", is_private=True, owner_id=1)
+        monkeypatch.setattr(handler.db, "get_room_by_name", lambda name: room)
+        monkeypatch.setattr(handler.db, "is_room_member", lambda room_id, user_id: False)
+
+        await handler.handle_join_room(fake_ws, {"name": "secret"}, 5)
+
+        assert fake_ws.sent[-1] == {
+            "type": "error",
+            "message": "cannot join private room without invite",
+        }
+
+    async def test_private_room_member_can_join(self, fake_ws, monkeypatch):
+        room = models.Room(id=1, room_name="secret", is_private=True, owner_id=1)
+        monkeypatch.setattr(handler.db, "get_room_by_name", lambda name: room)
+        monkeypatch.setattr(handler.db, "is_room_member", lambda room_id, user_id: True)
+        monkeypatch.setattr(handler.db, "add_room_member", lambda room_id, user_id: None)
+
+        await handler.handle_join_room(fake_ws, {"name": "secret"}, 5)
+
+        message = fake_ws.sent[-1]
+        assert message["type"] == "success"
+        assert message["message"] == "joined room"
+        assert message["room"]["is_private"] is True
+
+
 class TestRouting:
     async def test_room_message_routes_with_user_id(self, fake_ws, monkeypatch):
         calls = []

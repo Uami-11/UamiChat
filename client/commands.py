@@ -62,17 +62,18 @@ def parse_input(raw: str) -> dict:
             "name": parts[1]
         }
 
-    # /create room_name
+    # /create room_name [private]
     elif command == "/create":
         if len(parts) < 2:
             return {
                 "type": "error",
-                "message": "Usage: /create room_name"
+                "message": "Usage: /create room_name [private]"
             }
 
         return {
             "type": "create_room",
-            "name": parts[1]
+            "name": parts[1],
+            "is_private": len(parts) > 2 and parts[2] == "private",
         }
 
     # /help
@@ -155,7 +156,7 @@ def get_command_list() -> list[str]:
         "/dm username message     Send a direct message",
         "/rooms                   List all public rooms",
         "/join room_name          Join a public room",
-        "/create room_name        Create a new room",
+        "/create room_name        Create a new room (add 'private' to make it private)",
         "/invite username         Invite someone to your room",
         "/inbox                   Show unread direct messages",
         "/online                  Show online friends",

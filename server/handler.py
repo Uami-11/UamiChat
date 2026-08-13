@@ -375,7 +375,7 @@ async def handle_join_room(websocket, data, user_id):
         return
 
     # Private rooms cannot be joined without an invite
-    if room.is_private:
+    if room.is_private and not db.is_room_member(room.id, user_id):
         await websocket.send(json.dumps({
             "type": "error",
             "message": "cannot join private room without invite",

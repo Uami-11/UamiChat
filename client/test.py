@@ -13,6 +13,7 @@ Tests:
 
 import asyncio
 import sys
+import uuid
 
 sys.path.insert(0, "client")
 
@@ -20,6 +21,11 @@ import connection
 
 
 async def main():
+    # Random suffix so repeated runs don't collide
+    suffix = uuid.uuid4().hex[:8]
+    username = f"testuser_{suffix}"
+    room_name = f"Test Room {suffix}"
+
     # Connect
     ws = await connection.connect("ws://localhost:8765")
     print("Connected to server\n")
@@ -43,7 +49,7 @@ async def main():
 
     await connection.send(ws, {
         "type": "register",
-        "username": "testuser",
+        "username": username,
         "password": "testpass",
     })
 
@@ -57,7 +63,7 @@ async def main():
 
     await connection.send(ws, {
         "type": "login",
-        "username": "testuser",
+        "username": username,
         "password": "testpass",
     })
 
@@ -71,7 +77,7 @@ async def main():
 
     await connection.send(ws, {
         "type": "create_room",
-        "name": "Test Room",
+        "name": room_name,
         "is_private": False,
     })
 
@@ -97,7 +103,7 @@ async def main():
 
     await connection.send(ws, {
         "type": "join_room",
-        "name": "Test Room",
+        "name": room_name,
     })
 
     resp = await connection.receive(ws)
