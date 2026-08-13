@@ -1,0 +1,17 @@
+.git
+.gitignore
+.venv
+.env
+.env.example
+__pycache__
+*.pyc
+.pytest_cache
+tests
+docs
+k8s
+Dockerfile
+docker-compose.yml
+requirements-dev.txt
+pyproject.toml
+README.MD
+LICENSE
