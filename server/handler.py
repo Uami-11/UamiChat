@@ -241,6 +241,23 @@ async def handle_message(websocket, raw_message: str):
 
         await handle_invite(websocket, data, user_id)
 
+    elif msg_type == "room_message":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_room_message(websocket, data, user_id)
+
     else:
         await websocket.send(json.dumps({
             "type": "error",
@@ -633,3 +650,39 @@ async def handle_invite(websocket, data, user_id):
         "type": "success",
         "message": "user invited to room",
     }))
+
+
+# ============================================================
+# PARU MAHARJAN - WEEK 2 ROOM MESSAGES
+# ============================================================
+
+
+async def handle_room_message(websocket, data, user_id):
+    room_id = data.get("room_id")
+    content = data.get("content")
+
+    if not db.is_room_member(room_id, user_id):
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "you are not a member of this room",
+        }))
+        return
+
+    db.save_message(
+        sender_id=user_id,
+        message=content,
+        room_id=room_id,
+    )
+
+    sender = db.get_user_by_id(user_id)
+    room = db.get_room_by_id(room_id)
+
+    message = {
+        "type": "room_message",
+        "from": sender.username if sender else None,
+        "room": room.room_name if room else None,
+        "content": content,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    broadcast_to_room(room_id, message, exclude_user_id=user_id)
