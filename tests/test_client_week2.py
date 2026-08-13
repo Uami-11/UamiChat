@@ -76,6 +76,10 @@ class TestWeek2UI:
         ui.print_online_friends([])
         assert "No online friends" in console.export_text()
 
+    def test_print_prompt_renders(self, console):
+        ui.print_prompt()
+        assert "> " in console.export_text()
+
 
 class TestWithRoomContext:
     def test_room_message_gets_room_id(self):
@@ -124,6 +128,7 @@ class TestListen:
         out = console.export_text()
         assert "bob" in out
         assert "boom" in out
+        assert "> " in out
 
     async def test_sets_current_room_on_join(self, monkeypatch, console):
         messages = [
@@ -148,3 +153,73 @@ class TestListen:
             assert main.current_room == {"id": 5, "name": "dev"}
         finally:
             main.current_room = original
+
+
+class TestInputLoop:
+    async def _run(self, monkeypatch, lines):
+        monkeypatch.setattr(main, "read_input", lambda: lines.pop(0))
+
+        sent = []
+        disconnected = []
+
+        async def fake_send(ws, msg):
+            sent.append(msg)
+
+        async def fake_disconnect(ws):
+            disconnected.append(ws)
+
+        monkeypatch.setattr(main.connection, "send", fake_send)
+        monkeypatch.setattr(main.connection, "disconnect", fake_disconnect)
+
+        await main.input_loop(None)
+
+        return sent, disconnected
+
+    async def test_chat_message_sends_and_prompts(self, monkeypatch, console):
+        original = main.current_room
+        main.current_room = {"id": 7, "name": "dev"}
+        try:
+            sent, _ = await self._run(monkeypatch, ["hello", "/quit"])
+        finally:
+            main.current_room = original
+
+        assert sent == [{"type": "room_message", "room_id": 7, "content": "hello"}]
+        assert "> " in console.export_text()
+
+    async def test_chat_message_without_room_errors(self, monkeypatch, console):
+        original = main.current_room
+        main.current_room = None
+        try:
+            sent, _ = await self._run(monkeypatch, ["hello", "/quit"])
+        finally:
+            main.current_room = original
+
+        assert sent == []
+        assert "you are not in a room yet" in console.export_text()
+
+    async def test_response_commands_send_without_prompt(self, monkeypatch, console):
+        sent, _ = await self._run(monkeypatch, ["/rooms", "/quit"])
+
+        assert sent == [{"type": "list_rooms"}]
+        assert "> " not in console.export_text()
+
+    async def test_help_prints_and_prompts(self, monkeypatch, console):
+        sent, _ = await self._run(monkeypatch, ["/help", "/quit"])
+
+        out = console.export_text()
+        assert sent == []
+        assert "Commands" in out
+        assert "> " in out
+
+    async def test_error_prints_and_prompts(self, monkeypatch, console):
+        sent, _ = await self._run(monkeypatch, ["/nope", "/quit"])
+
+        out = console.export_text()
+        assert sent == []
+        assert "Unknown command" in out
+        assert "> " in out
+
+    async def test_quit_disconnects(self, monkeypatch, console):
+        _, disconnected = await self._run(monkeypatch, ["/quit"])
+
+        assert disconnected == [None]
