@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from datetime import datetime
 
 import pytest
 
@@ -73,7 +74,10 @@ class TestMessagesDB:
         owner, invitee, stranger, room = room_data
 
         db.save_message(sender_id=owner.id, message="hi", recipient_id=invitee.id)
-        assert len(db.get_unread_dms(invitee.id)) == 1
+        unread = db.get_unread_dms(invitee.id)
+        assert len(unread) == 1
+        assert unread[0]["message"] == "hi"
+        assert unread[0]["created_at"] is not None
 
         db.mark_message_read(invitee.id, owner.id)
         assert db.get_unread_dms(invitee.id) == []
@@ -146,7 +150,7 @@ class TestInboxHandler:
         monkeypatch.setattr(
             handler.db,
             "get_unread_dms",
-            lambda user_id: [{"sender_id": 2, "message": "hi"}],
+            lambda user_id: [{"sender_id": 2, "message": "hi", "created_at": datetime(2026, 8, 13, 7, 30, 0)}],
         )
         monkeypatch.setattr(handler.db, "get_user_by_id", lambda user_id: sender)
 
@@ -154,7 +158,7 @@ class TestInboxHandler:
 
         assert fake_ws.sent[-1] == {
             "type": "inbox_result",
-            "messages": [{"from": "bob", "content": "hi"}],
+            "messages": [{"from": "bob", "content": "hi", "timestamp": "2026-08-13T07:30:00"}],
         }
 
 
