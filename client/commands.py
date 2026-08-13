@@ -139,6 +139,19 @@ def parse_input(raw: str) -> dict:
             "username": parts[1]
         }
 
+    # /markread username
+    elif command == "/markread":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /markread username"
+            }
+
+        return {
+            "type": "mark_read",
+            "from": parts[1]
+        }
+
     # Unknown command
     else:
         return {
@@ -159,6 +172,7 @@ def get_command_list() -> list[str]:
         "/create room_name        Create a new room (add 'private' to make it private)",
         "/invite username         Invite someone to your room",
         "/inbox                   Show unread direct messages",
+        "/markread username       Mark all messages from a user as read",
         "/online                  Show online friends",
         "/addfriend username      Send a friend request",
         "/block username          Block a user",
