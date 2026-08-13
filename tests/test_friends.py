@@ -226,6 +226,35 @@ class TestAcceptFriendHandler:
         }
 
 
+class TestDeclineFriendHandler:
+    async def test_unknown_user_errors(self, fake_ws, monkeypatch):
+        monkeypatch.setattr(handler.db, "get_user_by_username", lambda username: None)
+
+        await handler.handle_decline_friend(fake_ws, {"username": "ghost"}, 1)
+
+        assert fake_ws.sent[-1] == {"type": "error", "message": "user not found"}
+
+    async def test_decline_removes_pending(self, fake_ws, monkeypatch):
+        other = models.User(id=2, username="bob", is_online=False)
+        declined = {}
+        monkeypatch.setattr(handler.db, "get_user_by_username", lambda username: other)
+        monkeypatch.setattr(
+            handler.db,
+            "decline_friend_request",
+            lambda user_id, friend_id: declined.update(
+                user_id=user_id, friend_id=friend_id
+            ),
+        )
+
+        await handler.handle_decline_friend(fake_ws, {"username": "bob"}, 1)
+
+        assert declined == {"user_id": 1, "friend_id": 2}
+        assert fake_ws.sent[-1] == {
+            "type": "success",
+            "message": "friend request declined",
+        }
+
+
 class TestOnlineFriendsHandler:
     async def test_returns_online_friends(self, fake_ws, monkeypatch):
         online = [models.User(id=2, username="bob", is_online=True)]
@@ -296,6 +325,25 @@ class TestRouting:
         assert calls[0][1] == {"type": "add_friend", "username": "bob"}
         assert calls[0][2] == 1
 
+    async def test_decline_friend_routes_with_user_id(self, fake_ws, monkeypatch):
+        calls = []
+
+        async def stub(websocket, data, user_id):
+            calls.append((websocket, data, user_id))
+
+        monkeypatch.setattr(handler, "handle_decline_friend", stub)
+        handler.connected_clients[1] = fake_ws
+        try:
+            await handler.handle_message(
+                fake_ws, json.dumps({"type": "decline_friend", "username": "bob"})
+            )
+        finally:
+            handler.connected_clients.pop(1, None)
+
+        assert len(calls) == 1
+        assert calls[0][1] == {"type": "decline_friend", "username": "bob"}
+        assert calls[0][2] == 1
+
     async def test_online_friends_routes_with_user_id(self, fake_ws, monkeypatch):
         calls = []
 
@@ -312,8 +360,9 @@ class TestRouting:
         assert calls == [(fake_ws, 1)]
 
     async def test_friend_routing_requires_login(self, fake_ws):
-        await handler.handle_message(
-            fake_ws, json.dumps({"type": "add_friend", "username": "bob"})
-        )
+        for msg_type in ["add_friend", "accept_friend", "decline_friend", "online_friends"]:
+            await handler.handle_message(
+                fake_ws, json.dumps({"type": msg_type, "username": "bob"})
+            )
 
-        assert fake_ws.sent[-1] == {"type": "error", "message": "not logged in"}
+            assert fake_ws.sent[-1] == {"type": "error", "message": "not logged in"}

@@ -33,6 +33,26 @@ class TestWeek2Commands:
         result = commands.parse_input("/addfriend")
         assert result["type"] == "error"
 
+    def test_accept(self):
+        assert commands.parse_input("/accept bob") == {
+            "type": "accept_friend",
+            "username": "bob",
+        }
+
+    def test_accept_missing_username_is_error(self):
+        result = commands.parse_input("/accept")
+        assert result["type"] == "error"
+
+    def test_decline(self):
+        assert commands.parse_input("/decline bob") == {
+            "type": "decline_friend",
+            "username": "bob",
+        }
+
+    def test_decline_missing_username_is_error(self):
+        result = commands.parse_input("/decline")
+        assert result["type"] == "error"
+
     def test_block(self):
         assert commands.parse_input("/block bob") == {
             "type": "block",
@@ -55,7 +75,7 @@ class TestWeek2Commands:
 
     def test_command_list_covers_week2_commands(self):
         text = "\n".join(commands.get_command_list())
-        for command in ["/invite", "/inbox", "/online", "/addfriend", "/block", "/markread"]:
+        for command in ["/invite", "/inbox", "/online", "/addfriend", "/accept", "/decline", "/block", "/markread"]:
             assert command in text
 
 
