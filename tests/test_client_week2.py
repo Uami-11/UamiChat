@@ -43,9 +43,19 @@ class TestWeek2Commands:
         result = commands.parse_input("/block")
         assert result["type"] == "error"
 
+    def test_markread(self):
+        assert commands.parse_input("/markread bob") == {
+            "type": "mark_read",
+            "from": "bob",
+        }
+
+    def test_markread_missing_username_is_error(self):
+        result = commands.parse_input("/markread")
+        assert result["type"] == "error"
+
     def test_command_list_covers_week2_commands(self):
         text = "\n".join(commands.get_command_list())
-        for command in ["/invite", "/inbox", "/online", "/addfriend", "/block"]:
+        for command in ["/invite", "/inbox", "/online", "/addfriend", "/block", "/markread"]:
             assert command in text
 
 
