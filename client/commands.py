@@ -87,6 +87,57 @@ def parse_input(raw: str) -> dict:
             "type": "quit"
         }
 
+    # /invite username
+    elif command == "/invite":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /invite username"
+            }
+
+        return {
+            "type": "invite",
+            "username": parts[1]
+        }
+
+    # /inbox
+    elif command == "/inbox":
+        return {
+            "type": "inbox"
+        }
+
+    # /online
+    elif command == "/online":
+        return {
+            "type": "online_friends"
+        }
+
+    # /addfriend username
+    elif command == "/addfriend":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /addfriend username"
+            }
+
+        return {
+            "type": "add_friend",
+            "username": parts[1]
+        }
+
+    # /block username
+    elif command == "/block":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /block username"
+            }
+
+        return {
+            "type": "block",
+            "username": parts[1]
+        }
+
     # Unknown command
     else:
         return {
@@ -101,10 +152,15 @@ def get_command_list() -> list[str]:
     """
 
     return [
-        "/dm username message    Send a direct message",
-        "/rooms                  List all public rooms",
-        "/join room_name         Join a room",
-        "/create room_name       Create a new room",
-        "/help                   Show available commands",
-        "/quit                   Exit UamiChat"
+        "/dm username message     Send a direct message",
+        "/rooms                   List all public rooms",
+        "/join room_name          Join a public room",
+        "/create room_name        Create a new room",
+        "/invite username         Invite someone to your room",
+        "/inbox                   Show unread direct messages",
+        "/online                  Show online friends",
+        "/addfriend username      Send a friend request",
+        "/block username          Block a user",
+        "/help                    Show available commands",
+        "/quit                    Exit UamiChat"
     ]
