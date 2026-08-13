@@ -19,6 +19,8 @@ spec:
         ports:
         - containerPort: 8765
         env:
+        - name: TZ
+          value: Asia/Kathmandu
         - name: DB_URL
           valueFrom:
             secretKeyRef:
