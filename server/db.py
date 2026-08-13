@@ -284,3 +284,174 @@ def is_room_member(room_id, user_id):
     conn.close()
 
     return count > 0
+
+
+def send_friend_request(user_id, friend_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO friendships (user_id, friend_id, status)
+        VALUES (%s, %s, 'pending')
+        ON CONFLICT DO NOTHING
+        """,
+        (user_id, friend_id),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def accept_friend_request(user_id, friend_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE friendships
+        SET status = 'accepted'
+        WHERE user_id = %s AND friend_id = %s AND status = 'pending'
+        """,
+        (friend_id, user_id),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def decline_friend_request(user_id, friend_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        DELETE FROM friendships
+        WHERE user_id = %s AND friend_id = %s AND status = 'pending'
+        """,
+        (friend_id, user_id),
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def get_friends(user_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        """
+        SELECT u.*
+        FROM users u
+        JOIN friendships f ON f.friend_id = u.id
+        WHERE f.user_id = %s AND f.status = 'accepted'
+        UNION
+        SELECT u.*
+        FROM users u
+        JOIN friendships f ON f.user_id = u.id
+        WHERE f.friend_id = %s AND f.status = 'accepted'
+        """,
+        (user_id, user_id),
+    )
+
+    rows = cur.fetchall()
+    conn.close()
+
+    friends = []
+
+    for row in rows:
+        friends.append(
+            models.User(
+                id=row["id"],
+                username=row["username"],
+                is_online=row["is_online"],
+            )
+        )
+
+    return friends
+
+
+def get_online_friends(user_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        """
+        SELECT u.*
+        FROM users u
+        JOIN friendships f ON f.friend_id = u.id
+        WHERE f.user_id = %s AND f.status = 'accepted' AND u.is_online = TRUE
+        UNION
+        SELECT u.*
+        FROM users u
+        JOIN friendships f ON f.user_id = u.id
+        WHERE f.friend_id = %s AND f.status = 'accepted' AND u.is_online = TRUE
+        """,
+        (user_id, user_id),
+    )
+
+    rows = cur.fetchall()
+    conn.close()
+
+    friends = []
+
+    for row in rows:
+        friends.append(
+            models.User(
+                id=row["id"],
+                username=row["username"],
+                is_online=row["is_online"],
+            )
+        )
+
+    return friends
+
+
+def block_user(user_id, target_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE friendships
+        SET status = 'blocked'
+        WHERE user_id = %s AND friend_id = %s
+        """,
+        (user_id, target_id),
+    )
+
+    if cur.rowcount == 0:
+        cur.execute(
+            """
+            INSERT INTO friendships (user_id, friend_id, status)
+            VALUES (%s, %s, 'blocked')
+            """,
+            (user_id, target_id),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def is_blocked(sender_id, recipient_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM friendships
+        WHERE status = 'blocked'
+        AND (
+            (user_id = %s AND friend_id = %s)
+            OR (user_id = %s AND friend_id = %s)
+        )
+        """,
+        (recipient_id, sender_id, sender_id, recipient_id),
+    )
+
+    count = cur.fetchone()[0]
+    conn.close()
+
+    return count > 0

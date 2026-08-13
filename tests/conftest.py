@@ -32,6 +32,14 @@ def fake_ws():
 
 
 @pytest.fixture
+def fake_ws_factory():
+    def factory():
+        return FakeWebsocket()
+
+    return factory
+
+
+@pytest.fixture
 def console():
     """Swap ui.console for a recording console and return it."""
     from rich.console import Console
