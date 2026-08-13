@@ -593,6 +593,7 @@ async def handle_inbox(websocket, user_id):
         messages.append({
             "from": sender.username if sender else "unknown",
             "content": row["message"],
+            "timestamp": row["created_at"].isoformat(),
         })
 
     await websocket.send(json.dumps({
