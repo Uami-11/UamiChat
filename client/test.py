@@ -29,7 +29,9 @@ async def main():
     # -------------------------
     print("=== TEST 1: PING ===")
 
-    await connection.send(ws, {"type": "ping"})
+    await connection.send(ws, {
+        "type": "ping"
+    })
 
     resp = await connection.receive(ws)
     print(f"Ping response: {resp}\n")
@@ -39,14 +41,11 @@ async def main():
     # -------------------------
     print("=== TEST 2: REGISTER ===")
 
-    await connection.send(
-        ws,
-        {
-            "type": "register",
-            "username": "testuser",
-            "password": "testpass",
-        },
-    )
+    await connection.send(ws, {
+        "type": "register",
+        "username": "testuser",
+        "password": "testpass",
+    })
 
     resp = await connection.receive(ws)
     print(f"Register response: {resp}\n")
@@ -56,14 +55,11 @@ async def main():
     # -------------------------
     print("=== TEST 3: LOGIN ===")
 
-    await connection.send(
-        ws,
-        {
-            "type": "login",
-            "username": "testuser",
-            "password": "testpass",
-        },
-    )
+    await connection.send(ws, {
+        "type": "login",
+        "username": "testuser",
+        "password": "testpass",
+    })
 
     resp = await connection.receive(ws)
     print(f"Login response: {resp}\n")
@@ -73,14 +69,11 @@ async def main():
     # -------------------------
     print("=== TEST 4: CREATE ROOM ===")
 
-    await connection.send(
-        ws,
-        {
-            "type": "create_room",
-            "name": "Test Room",
-            "is_private": False,
-        },
-    )
+    await connection.send(ws, {
+        "type": "create_room",
+        "name": "Test Room",
+        "is_private": False,
+    })
 
     resp = await connection.receive(ws)
     print(f"Create room response: {resp}\n")
@@ -90,12 +83,9 @@ async def main():
     # -------------------------
     print("=== TEST 5: LIST ROOMS ===")
 
-    await connection.send(
-        ws,
-        {
-            "type": "list_rooms",
-        },
-    )
+    await connection.send(ws, {
+        "type": "list_rooms",
+    })
 
     resp = await connection.receive(ws)
     print(f"Room list response: {resp}\n")
@@ -105,13 +95,10 @@ async def main():
     # -------------------------
     print("=== TEST 6: JOIN ROOM ===")
 
-    await connection.send(
-        ws,
-        {
-            "type": "join_room",
-            "name": "Test Room",
-        },
-    )
+    await connection.send(ws, {
+        "type": "join_room",
+        "name": "Test Room",
+    })
 
     resp = await connection.receive(ws)
     print(f"Join room response: {resp}\n")
