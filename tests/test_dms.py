@@ -68,6 +68,17 @@ class TestInviteToRoomDB:
         assert db.invite_to_room(room.id, owner.id, invitee.id) is False
 
 
+class TestMessagesDB:
+    def test_save_and_mark_message_read(self, room_data):
+        owner, invitee, stranger, room = room_data
+
+        db.save_message(sender_id=owner.id, message="hi", recipient_id=invitee.id)
+        assert len(db.get_unread_dms(invitee.id)) == 1
+
+        db.mark_message_read(invitee.id, owner.id)
+        assert db.get_unread_dms(invitee.id) == []
+
+
 class TestDirectMessageHandler:
     async def test_unknown_recipient_errors(self, fake_ws, monkeypatch):
         monkeypatch.setattr(handler.db, "get_user_by_username", lambda username: None)

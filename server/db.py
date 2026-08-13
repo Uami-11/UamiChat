@@ -126,7 +126,7 @@ def mark_message_read(user_id, sender_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-        "UPDATE messages m SET m.is_read = TRUE WHERE m.recipient_id = %s AND m.sender_id = %s",
+        "UPDATE messages m SET is_read = TRUE WHERE m.recipient_id = %s AND m.sender_id = %s",
         (
             user_id,
             sender_id,

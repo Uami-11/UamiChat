@@ -391,6 +391,12 @@ async def handle_join_room(websocket, data, user_id):
     await websocket.send(json.dumps({
         "type": "success",
         "message": "joined room",
+        "room": {
+            "id": room.id,
+            "name": room.room_name,
+            "is_private": room.is_private,
+            "owner_id": room.owner_id,
+        },
     }))
 
 

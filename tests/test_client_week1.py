@@ -117,8 +117,8 @@ class TestUI:
 
     def test_room_list_renders_rows(self, console):
         rooms = [
-            {"name": "dev", "members": 3, "created": "today"},
-            {"name": "general", "members": 5, "created": "yesterday"},
+            {"id": 1, "name": "dev", "is_private": False},
+            {"id": 2, "name": "general", "is_private": True},
         ]
         ui.print_room_list(rooms)
         out = console.export_text()

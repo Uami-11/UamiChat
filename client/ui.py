@@ -95,9 +95,9 @@ def print_room_list(rooms):
     Display a list of public rooms.
 
     Each room should be a dictionary containing:
+    - id
     - name
-    - members
-    - created
+    - is_private
     """
 
     table = Table(
@@ -106,19 +106,69 @@ def print_room_list(rooms):
     )
 
     table.add_column("Name", style="bold cyan")
-    table.add_column("Members", style="green")
-    table.add_column("Created", style="yellow")
+    table.add_column("ID", style="green")
+    table.add_column("Type", style="yellow")
 
     for room in rooms:
-        name = str(room.get("name", ""))
-        members = str(room.get("members", ""))
-        created = str(room.get("created", ""))
-
         table.add_row(
-            name,
-            members,
-            created
+            str(room.get("name", "")),
+            str(room.get("id", "")),
+            "private" if room.get("is_private") else "public",
         )
+
+    console.print(table)
+
+
+def print_inbox(messages):
+    """
+    Display unread direct messages.
+
+    Each message should be a dictionary containing:
+    - from
+    - content
+    - timestamp (optional)
+    """
+
+    table = Table(
+        title="Inbox",
+        show_header=True
+    )
+
+    table.add_column("From", style="bold cyan")
+    table.add_column("Message")
+    table.add_column("Time", style="yellow")
+
+    for message in messages:
+        table.add_row(
+            str(message.get("from", "")),
+            str(message.get("content", "")),
+            str(message.get("timestamp", "")),
+        )
+
+    console.print(table)
+
+
+def print_online_friends(users):
+    """
+    Display a list of online friends.
+
+    Each user should be a dictionary containing:
+    - username
+    """
+
+    if not users:
+        console.print("[bold yellow]No online friends[/bold yellow]")
+        return
+
+    table = Table(
+        title="Online Friends",
+        show_header=True
+    )
+
+    table.add_column("Username", style="bold cyan")
+
+    for user in users:
+        table.add_row(str(user.get("username", "")))
 
     console.print(table)
 
