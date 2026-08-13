@@ -54,6 +54,14 @@ class TestParseInput:
         assert commands.parse_input("/create dev") == {
             "type": "create_room",
             "name": "dev",
+            "is_private": False,
+        }
+
+    def test_create_private(self):
+        assert commands.parse_input("/create dev private") == {
+            "type": "create_room",
+            "name": "dev",
+            "is_private": True,
         }
 
     def test_create_missing_name_is_error(self):
