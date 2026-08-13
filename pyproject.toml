@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uamichat"
+version = "0.1.0"
+description = "A terminal-based real time chat application"
+requires-python = ">=3.10"
+dependencies = [
+    "websockets>=14.0",
+    "rich>=14.0",
+]
+
+[project.scripts]
+uamichat = "client.main:run"
+
+[tool.setuptools]
+packages = ["client"]

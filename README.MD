@@ -57,6 +57,32 @@ To stop everything:
 docker compose down
 ```
 
+## Installing the Client
+
+Install the client with pip (from the repo or straight from GitHub):
+
+```bash
+pip install .
+# or
+pip install git+https://github.com/Uami-11/UamiChat.git
+```
+
+Then just run:
+
+```bash
+uamichat
+```
+
+It connects to the live server at `ws://chat.maharjannirwan.com.np` by default.
+
+For local development, point it at your dev server:
+
+```bash
+UAMICHAT_SERVER_URL=ws://localhost:8765 uamichat
+# or from the repo without installing
+UAMICHAT_SERVER_URL=ws://localhost:8765 python -m client.main
+```
+
 ## Git Workflow
 
 ### Branches
@@ -688,3 +714,62 @@ After all four people have merged their work, verify these flows:
 /help                      list all available commands
 /quit                      disconnect and exit
 ```
+
+---
+
+## Deployment (k3s)
+
+The server runs on a k3s cluster behind a Cloudflare tunnel (`chat.maharjannirwan.com.np` → host cloudflared → Traefik → `uamichat-server` service).
+
+### Build and push the server image
+
+```bash
+docker build -t ghcr.io/uami-11/uamichat-server:latest .
+echo $GH_TOKEN | docker login ghcr.io -u Uami-11 --password-stdin
+docker push ghcr.io/uami-11/uamichat-server:latest
+```
+
+Set the package visibility to **Public** on GitHub so the cluster can pull it without credentials.
+
+### Create the secrets
+
+The real `k8s/secrets.yaml` is gitignored — never commit real passwords. Make it from the example:
+
+```bash
+cp k8s/secrets.yaml.example k8s/secrets.yaml
+echo -n "postgresql://uami:YOUR_PASSWORD@postgres:5432/uamichat" | base64
+echo -n "YOUR_PASSWORD" | base64
+```
+
+Paste the base64 values into `k8s/secrets.yaml`.
+
+### Deploy the manifests (in order)
+
+```bash
+kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/postgres.yaml
+
+kubectl wait --for=condition=ready pod -l app=postgres -n uamichat --timeout=60s
+
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+Check everything:
+
+```bash
+kubectl get pods -n uamichat
+kubectl logs -f deployment/uamichat-server -n uamichat
+```
+
+### Notes
+
+- `configmap.yaml` holds the schema and loads it into Postgres on first start. If you change `sql/schema.sql`, regenerate it:
+
+  ```bash
+  kubectl create configmap schema-sql --from-file=schema.sql=./sql/schema.sql --namespace uamichat --dry-run=client -o yaml > k8s/configmap.yaml
+  ```
+
