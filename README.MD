@@ -229,6 +229,7 @@ All communication is JSON over WebSocket. Every message has a `type` field.
 ```json
 { "type": "add_friend", "username": "username" }
 { "type": "accept_friend", "username": "username" }
+{ "type": "decline_friend", "username": "username" }
 { "type": "online_friends" }
 ```
 
@@ -264,7 +265,7 @@ When you finish, open a PR into `dev` and message the group.
 
 ---
 
-### Person 1 — Server: Rooms
+### Paru Maharjan — Server: Rooms
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -342,7 +343,7 @@ You are adding new functions to existing files. Do not change any code that alre
 
 ---
 
-### Person 2 — Server: DMs + Invites
+### Bipana Khadka — Server: DMs + Invites
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -382,7 +383,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 `handle_mark_read(websocket, data, user_id)`
 - Read "from" (username) from data
 - Look up the sender with db.get_user_by_username(from)
-- Call db.mark_messages_read(user_id, sender_id)
+- Call db.mark_message_read(user_id, sender_id)
 - Send back success
 
 **Also:** Add routing in handle_message for "direct_message", "inbox", "mark_read".
@@ -406,7 +407,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 
 ---
 
-### Person 3 — Server: Friends + Block
+### Suryansh Bikram Shah — Server: Friends + Block
 
 **Your files:** `server/db.py` and `server/handler.py`
 
@@ -490,7 +491,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 
 ---
 
-### Person 4 — Client: Commands + UI + Main
+### Subista Kunwar — Client: Commands + UI + Main
 
 **Your files:** `client/commands.py`, `client/ui.py`, `client/main.py`
 
@@ -618,26 +619,54 @@ This is the entry point that ties everything together.
 
 ---
 
+## Running Tests
+
+Unit and integration tests live in `tests/` and use `pytest`. One test file per feature.
+
+```bash
+# install test dependencies (includes the regular ones)
+uv pip install -r requirements-dev.txt
+
+# run everything
+pytest
+
+# run a single file
+pytest tests/test_client_week1.py
+```
+
+Handler tests are unit tests that mock the database layer. Tests that touch the database use a dedicated `uamichat_test` database so development data is never polluted. It is created on the docker Postgres once:
+
+```bash
+# create the test database (first time only)
+docker compose exec -T db psql -U uami -d uamichat -c "CREATE DATABASE uamichat_test"
+docker compose exec -T db psql -U uami -d uamichat_test -f /docker-entrypoint-initdb.d/schema.sql
+
+# override the test DB URL if it is not at the default location
+# TEST_DB_URL=postgresql://uami@localhost:5433/uamichat_test pytest
+```
+
+---
+
 ## Testing Checklist
 
 After all four people have merged their work, verify these flows:
 
-- [ ] Register a new user
-- [ ] Login with existing user
-- [ ] Create a public room
-- [ ] Join a public room
-- [ ] List public rooms
-- [ ] Send a message in a room
-- [ ] Send a DM to another user
-- [ ] Check inbox for unread DMs
-- [ ] Mark DMs as read
-- [ ] Send a friend request
-- [ ] Accept a friend request
-- [ ] See online friends
-- [ ] Block a user
-- [ ] Invite someone to a private room
-- [ ] /help shows all commands
-- [ ] /quit disconnects cleanly
+- [x] Register a new user
+- [x] Login with existing user
+- [x] Create a public room
+- [x] Join a public room
+- [x] List public rooms
+- [x] Send a message in a room
+- [x] Send a DM to another user
+- [x] Check inbox for unread DMs
+- [x] Mark DMs as read
+- [x] Send a friend request
+- [x] Accept a friend request
+- [x] See online friends
+- [x] Block a user
+- [x] Invite someone to a private room
+- [x] /help shows all commands
+- [x] /quit disconnects cleanly
 
 ---
 
@@ -650,8 +679,11 @@ After all four people have merged their work, verify these flows:
 /create roomname           create a new room
 /invite username           invite someone to your private room
 /inbox                     show unread direct messages
+/markread username         mark all messages from a user as read
 /online                    show online friends
 /addfriend username        send a friend request
+/accept username           accept a friend request
+/decline username          decline a friend request
 /block username            block a user
 /help                      list all available commands
 /quit                      disconnect and exit

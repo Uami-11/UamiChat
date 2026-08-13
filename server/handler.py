@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from . import auth
 from . import db
@@ -24,10 +25,16 @@ def send_to_client(user_id, message: dict):
 
 def broadcast_to_room(room_id, message: dict, exclude_user_id=None):
     from . import db as database
+
     cur = database.get_connection().cursor()
-    cur.execute("SELECT user_id FROM room_members WHERE room_id=%s", (room_id,))
+    cur.execute(
+        "SELECT user_id FROM room_members WHERE room_id=%s",
+        (room_id,),
+    )
+
     members = cur.fetchall()
     cur.connection.close()
+
     for (user_id,) in members:
         if user_id != exclude_user_id:
             send_to_client(user_id, message)
@@ -39,10 +46,235 @@ async def handle_message(websocket, raw_message: str):
 
     if msg_type == "register":
         await handle_register(websocket, data)
+
     elif msg_type == "login":
         await handle_login(websocket, data)
+
     elif msg_type == "ping":
         await handle_ping(websocket, data)
+
+    # Week 1 - Rooms
+    elif msg_type == "create_room":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_create_room(websocket, data, user_id)
+
+    elif msg_type == "join_room":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_join_room(websocket, data, user_id)
+
+    elif msg_type == "list_rooms":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_list_rooms(websocket, user_id)
+
+    elif msg_type == "add_friend":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_add_friend(websocket, data, user_id)
+
+    elif msg_type == "accept_friend":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_accept_friend(websocket, data, user_id)
+
+    elif msg_type == "decline_friend":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_decline_friend(websocket, data, user_id)
+
+    elif msg_type == "online_friends":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_online_friends(websocket, user_id)
+
+    elif msg_type == "block":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_block(websocket, data, user_id)
+
+    elif msg_type == "direct_message":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_direct_message(websocket, data, user_id)
+
+    elif msg_type == "inbox":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_inbox(websocket, user_id)
+
+    elif msg_type == "mark_read":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_mark_read(websocket, data, user_id)
+
+    elif msg_type == "invite":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_invite(websocket, data, user_id)
+
+    elif msg_type == "room_message":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_room_message(websocket, data, user_id)
+
     else:
         await websocket.send(json.dumps({
             "type": "error",
@@ -51,7 +283,11 @@ async def handle_message(websocket, raw_message: str):
 
 
 async def handle_register(websocket, data: dict):
-    result = auth.register_user(data["username"], data["password"])
+    result = auth.register_user(
+        data["username"],
+        data["password"],
+    )
+
     if result["success"]:
         await websocket.send(json.dumps({
             "type": "success",
@@ -66,10 +302,22 @@ async def handle_register(websocket, data: dict):
 
 
 async def handle_login(websocket, data: dict):
-    result = auth.login_user(data["username"], data["password"])
+    result = auth.login_user(
+        data["username"],
+        data["password"],
+    )
+
     if result["success"]:
-        register_client(result["user"].id, websocket)
-        db.set_user_online(result["user"].id, True)
+        register_client(
+            result["user"].id,
+            websocket,
+        )
+
+        db.set_user_online(
+            result["user"].id,
+            True,
+        )
+
         await websocket.send(json.dumps({
             "type": "success",
             "message": "logged in",
@@ -83,4 +331,402 @@ async def handle_login(websocket, data: dict):
 
 
 async def handle_ping(websocket, data: dict):
-    await websocket.send(json.dumps({"type": "pong"}))
+    await websocket.send(
+        json.dumps({
+            "type": "pong"
+        })
+    )
+
+
+# ============================================================
+# PARU MAHARJAN - WEEK 1 ROOMS
+# ============================================================
+
+
+async def handle_create_room(websocket, data, user_id):
+    name = data.get("name")
+    is_private = data.get("is_private", False)
+
+    room = db.create_room(
+        name,
+        is_private,
+        user_id,
+    )
+
+    if room is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "room name already exists",
+        }))
+        return
+
+    # Automatically add the creator as a member
+    db.add_room_member(
+        room.id,
+        user_id,
+    )
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "room created",
+        "room": {
+            "id": room.id,
+            "name": room.room_name,
+            "is_private": room.is_private,
+            "owner_id": room.owner_id,
+        },
+    }))
+
+
+async def handle_join_room(websocket, data, user_id):
+    name = data.get("name")
+
+    room = db.get_room_by_name(name)
+
+    # Room does not exist
+    if room is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "room not found",
+        }))
+        return
+
+    # Private rooms cannot be joined without an invite
+    if room.is_private and not db.is_room_member(room.id, user_id):
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot join private room without invite",
+        }))
+        return
+
+    # Add user to the public room
+    db.add_room_member(
+        room.id,
+        user_id,
+    )
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "joined room",
+        "room": {
+            "id": room.id,
+            "name": room.room_name,
+            "is_private": room.is_private,
+            "owner_id": room.owner_id,
+        },
+    }))
+
+
+async def handle_list_rooms(websocket, user_id):
+    rooms = db.get_public_rooms()
+
+    room_list = []
+
+    for room in rooms:
+        room_list.append({
+            "id": room.id,
+            "name": room.room_name,
+            "is_private": room.is_private,
+            "owner_id": room.owner_id,
+        })
+
+    await websocket.send(json.dumps({
+        "type": "room_list",
+        "rooms": room_list,
+    }))
+
+
+# ============================================================
+# SURYANSH BIKRAM SHAH - WEEK 1 + WEEK 2 FRIENDS + BLOCK
+# ============================================================
+
+
+async def handle_add_friend(websocket, data, user_id):
+    username = data.get("username")
+
+    target = db.get_user_by_username(username)
+
+    if target is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    if target.id == user_id:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot add yourself as a friend",
+        }))
+        return
+
+    db.send_friend_request(user_id, target.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "friend request sent",
+    }))
+
+    if target.id in connected_clients:
+        sender = db.get_user_by_id(user_id)
+        send_to_client(target.id, {
+            "type": "success",
+            "message": f"{sender.username} sent you a friend request",
+        })
+
+
+async def handle_accept_friend(websocket, data, user_id):
+    username = data.get("username")
+
+    other = db.get_user_by_username(username)
+
+    if other is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    if other.id == user_id:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot add yourself as a friend",
+        }))
+        return
+
+    db.accept_friend_request(user_id, other.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "friend request accepted",
+    }))
+
+    if other.id in connected_clients:
+        accepter = db.get_user_by_id(user_id)
+        send_to_client(other.id, {
+            "type": "success",
+            "message": f"{accepter.username} accepted your friend request",
+        })
+
+
+async def handle_decline_friend(websocket, data, user_id):
+    username = data.get("username")
+
+    other = db.get_user_by_username(username)
+
+    if other is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    db.decline_friend_request(user_id, other.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "friend request declined",
+    }))
+
+
+async def handle_online_friends(websocket, user_id):
+    users = db.get_online_friends(user_id)
+
+    user_list = []
+
+    for user in users:
+        user_list.append({
+            "id": user.id,
+            "username": user.username,
+            "is_online": user.is_online,
+        })
+
+    await websocket.send(json.dumps({
+        "type": "online_friends_result",
+        "users": user_list,
+    }))
+
+
+async def handle_block(websocket, data, user_id):
+    username = data.get("username")
+
+    target = db.get_user_by_username(username)
+
+    if target is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    if target.id == user_id:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot block yourself",
+        }))
+        return
+
+    db.block_user(user_id, target.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "user blocked",
+    }))
+
+
+# ============================================================
+# BIPANA KHADKA - WEEK 1 + WEEK 2 DMS + INVITES
+# ============================================================
+
+
+async def handle_direct_message(websocket, data, user_id):
+    to_username = data.get("to")
+    content = data.get("content")
+
+    recipient = db.get_user_by_username(to_username)
+
+    if recipient is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    if db.is_blocked(user_id, recipient.id):
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot send message to this user",
+        }))
+        return
+
+    db.save_message(
+        sender_id=user_id,
+        message=content,
+        recipient_id=recipient.id,
+    )
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "message sent",
+    }))
+
+    if recipient.id in connected_clients:
+        sender = db.get_user_by_id(user_id)
+        send_to_client(recipient.id, {
+            "type": "direct_message",
+            "from": sender.username,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+
+async def handle_inbox(websocket, user_id):
+    unread = db.get_unread_dms(user_id)
+
+    messages = []
+
+    for row in unread:
+        sender = db.get_user_by_id(row["sender_id"])
+        messages.append({
+            "from": sender.username if sender else "unknown",
+            "content": row["message"],
+            "timestamp": row["created_at"].isoformat(),
+        })
+
+    await websocket.send(json.dumps({
+        "type": "inbox_result",
+        "messages": messages,
+    }))
+
+
+async def handle_mark_read(websocket, data, user_id):
+    from_username = data.get("from")
+
+    sender = db.get_user_by_username(from_username)
+
+    if sender is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    db.mark_message_read(user_id, sender.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "messages marked as read",
+    }))
+
+
+async def handle_invite(websocket, data, user_id):
+    room_id = data.get("room_id")
+    username = data.get("username")
+
+    invitee = db.get_user_by_username(username)
+
+    if invitee is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    invited = db.invite_to_room(room_id, user_id, invitee.id)
+
+    if not invited:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "could not invite user to room",
+        }))
+        return
+
+    if invitee.id in connected_clients:
+        room = db.get_room_by_id(room_id)
+        inviter = db.get_user_by_id(user_id)
+        send_to_client(invitee.id, {
+            "type": "invite_received",
+            "room": room.room_name if room else None,
+            "from": inviter.username if inviter else None,
+        })
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "user invited to room",
+    }))
+
+
+# ============================================================
+# PARU MAHARJAN - WEEK 2 ROOM MESSAGES
+# ============================================================
+
+
+async def handle_room_message(websocket, data, user_id):
+    room_id = data.get("room_id")
+    content = data.get("content")
+
+    if not db.is_room_member(room_id, user_id):
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "you are not a member of this room",
+        }))
+        return
+
+    db.save_message(
+        sender_id=user_id,
+        message=content,
+        room_id=room_id,
+    )
+
+    sender = db.get_user_by_id(user_id)
+    room = db.get_room_by_id(room_id)
+
+    message = {
+        "type": "room_message",
+        "from": sender.username if sender else None,
+        "room": room.room_name if room else None,
+        "content": content,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    broadcast_to_room(room_id, message, exclude_user_id=user_id)

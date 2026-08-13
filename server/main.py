@@ -1,9 +1,15 @@
 import asyncio
+import logging
 import os
 
 import websockets
 
 from . import handler
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
 
 
 async def connection_handler(websocket):
@@ -12,6 +18,14 @@ async def connection_handler(websocket):
             await handler.handle_message(websocket, raw_message)
     except websockets.exceptions.ConnectionClosed:
         pass
+    except Exception:
+        logging.exception("unhandled error while handling message")
+        try:
+            await websocket.send(
+                '{"type": "error", "message": "internal server error"}'
+            )
+        except websockets.exceptions.ConnectionClosed:
+            pass
     finally:
         for user_id, ws in list(handler.connected_clients.items()):
             if ws is websocket:
