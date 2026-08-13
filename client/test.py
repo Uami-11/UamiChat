@@ -1,5 +1,14 @@
 """
-Test client — tests the server connection and Week 1 client features.
+Test client — tests Week 1 Room functionality.
+
+Tests:
+1. Connect
+2. Register
+3. Login
+4. Create a public room
+5. List public rooms
+6. Join the room
+7. Disconnect
 """
 
 import asyncio
@@ -8,192 +17,110 @@ import sys
 sys.path.insert(0, "client")
 
 import connection
-from commands import parse_input, get_command_list
-from ui import (
-    print_welcome,
-    print_message,
-    print_system,
-    print_error,
-    print_help,
-    print_room_list,
-    clear_screen,
-)
 
 
 async def main():
+    # Connect
+    ws = await connection.connect("ws://localhost:8765")
+    print("Connected to server\n")
 
     # -------------------------
-    # UI TEST
+    # 1. Ping
     # -------------------------
+    print("=== TEST 1: PING ===")
 
-    clear_screen()
-    print_welcome()
+    await connection.send(ws, {"type": "ping"})
 
-    print_system("Starting client tests...")
-
-    # -------------------------
-    # COMMAND PARSER TEST
-    # -------------------------
-
-    print_system("Testing command parser...")
-
-    test_inputs = [
-        "/dm nirwan hello",
-        "/rooms",
-        "/join dev",
-        "/create dev",
-        "/help",
-        "/quit",
-        "hello everyone",
-        "/dm",
-        "/join",
-        "/unknown",
-    ]
-
-    for raw in test_inputs:
-        result = parse_input(raw)
-        print(f"Input: {raw}")
-        print(f"Result: {result}")
-        print()
+    resp = await connection.receive(ws)
+    print(f"Ping response: {resp}\n")
 
     # -------------------------
-    # HELP TEST
+    # 2. Register
     # -------------------------
+    print("=== TEST 2: REGISTER ===")
 
-    print_system("Testing help display...")
-    print_help(get_command_list())
-
-    # -------------------------
-    # MESSAGE TEST
-    # -------------------------
-
-    print_system("Testing message display...")
-    print_message(
-        "testuser",
-        "Hello everyone!",
-        "12:30"
+    await connection.send(
+        ws,
+        {
+            "type": "register",
+            "username": "testuser",
+            "password": "testpass",
+        },
     )
 
-    # -------------------------
-    # ROOM LIST TEST
-    # -------------------------
+    resp = await connection.receive(ws)
+    print(f"Register response: {resp}\n")
 
-    print_system("Testing room list display...")
+    # -------------------------
+    # 3. Login
+    # -------------------------
+    print("=== TEST 3: LOGIN ===")
 
-    test_rooms = [
+    await connection.send(
+        ws,
         {
-            "name": "general",
-            "members": 5,
-            "created": "2026-08-09"
+            "type": "login",
+            "username": "testuser",
+            "password": "testpass",
         },
+    )
+
+    resp = await connection.receive(ws)
+    print(f"Login response: {resp}\n")
+
+    # -------------------------
+    # 4. Create Room
+    # -------------------------
+    print("=== TEST 4: CREATE ROOM ===")
+
+    await connection.send(
+        ws,
         {
-            "name": "dev",
-            "members": 3,
-            "created": "2026-08-09"
-        }
-    ]
-
-    print_room_list(test_rooms)
-
-    # -------------------------
-    # SERVER CONNECTION TEST
-    # -------------------------
-
-    print_system("Connecting to server...")
-
-    ws = await connection.connect("ws://localhost:8765")
-
-    print_system("Connected to server.")
-
-    # -------------------------
-    # PING TEST
-    # -------------------------
-
-    print_system("Testing ping...")
-
-    await connection.send(ws, {
-        "type": "ping"
-    })
+            "type": "create_room",
+            "name": "Test Room",
+            "is_private": False,
+        },
+    )
 
     resp = await connection.receive(ws)
-
-    print(f"Ping response: {resp}")
+    print(f"Create room response: {resp}\n")
 
     # -------------------------
-    # REGISTER TEST
+    # 5. List Public Rooms
     # -------------------------
+    print("=== TEST 5: LIST ROOMS ===")
 
-    print_system("Testing registration...")
-
-    await connection.send(ws, {
-        "type": "register",
-        "username": "testuser",
-        "password": "testpass",
-    })
+    await connection.send(
+        ws,
+        {
+            "type": "list_rooms",
+        },
+    )
 
     resp = await connection.receive(ws)
-
-    print(f"Register response: {resp}")
+    print(f"Room list response: {resp}\n")
 
     # -------------------------
-    # LOGIN TEST
+    # 6. Join Room
     # -------------------------
+    print("=== TEST 6: JOIN ROOM ===")
 
-    print_system("Testing login...")
-
-    await connection.send(ws, {
-        "type": "login",
-        "username": "testuser",
-        "password": "testpass",
-    })
+    await connection.send(
+        ws,
+        {
+            "type": "join_room",
+            "name": "Test Room",
+        },
+    )
 
     resp = await connection.receive(ws)
-
-    print(f"Login response: {resp}")
-
-    # -------------------------
-    # TEST COMMAND DICTIONARIES
-    # -------------------------
-
-    print_system("Testing client commands...")
-
-    commands_to_test = [
-        parse_input("/dm nirwan hello"),
-        parse_input("/rooms"),
-        parse_input("/join dev"),
-        parse_input("/create dev"),
-        parse_input("hello everyone"),
-    ]
-
-    for command in commands_to_test:
-        print(f"Command: {command}")
+    print(f"Join room response: {resp}\n")
 
     # -------------------------
-    # ERROR TEST
+    # 7. Disconnect
     # -------------------------
-
-    print_system("Testing error handling...")
-
-    error_tests = [
-        parse_input("/dm"),
-        parse_input("/join"),
-        parse_input("/create"),
-        parse_input("/unknown"),
-        parse_input(""),
-    ]
-
-    for error in error_tests:
-        if error["type"] == "error":
-            print_error(error["message"])
-
-    # -------------------------
-    # DISCONNECT
-    # -------------------------
-
     await connection.disconnect(ws)
-
-    print_system("Disconnected from server.")
-    print_system("All tests completed.")
+    print("Disconnected")
 
 
 if __name__ == "__main__":
