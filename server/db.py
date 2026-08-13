@@ -455,3 +455,56 @@ def is_blocked(sender_id, recipient_id):
     conn.close()
 
     return count > 0
+
+
+def is_room_owner(room_id, user_id):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT COUNT(*)
+        FROM rooms
+        WHERE id = %s AND owner_id = %s
+        """,
+        (room_id, user_id),
+    )
+
+    count = cur.fetchone()[0]
+    conn.close()
+
+    return count > 0
+
+
+def get_room_by_id(room_id):
+    conn = get_connection()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    cur.execute(
+        "SELECT * FROM rooms WHERE id = %s",
+        (room_id,),
+    )
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        return models.Room(
+            id=row["id"],
+            room_name=row["room_name"],
+            is_private=row["is_private"],
+            owner_id=row["owner_id"],
+        )
+
+    return None
+
+
+def invite_to_room(room_id, inviter_id, invitee_id):
+    if not is_room_owner(room_id, inviter_id):
+        return False
+
+    if is_room_member(room_id, invitee_id):
+        return False
+
+    add_room_member(room_id, invitee_id)
+    return True

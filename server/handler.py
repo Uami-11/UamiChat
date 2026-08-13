@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from . import auth
 from . import db
@@ -171,6 +172,74 @@ async def handle_message(websocket, raw_message: str):
             return
 
         await handle_block(websocket, data, user_id)
+
+    elif msg_type == "direct_message":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_direct_message(websocket, data, user_id)
+
+    elif msg_type == "inbox":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_inbox(websocket, user_id)
+
+    elif msg_type == "mark_read":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_mark_read(websocket, data, user_id)
+
+    elif msg_type == "invite":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_invite(websocket, data, user_id)
 
     else:
         await websocket.send(json.dumps({
@@ -442,4 +511,125 @@ async def handle_block(websocket, data, user_id):
     await websocket.send(json.dumps({
         "type": "success",
         "message": "user blocked",
+    }))
+
+
+# ============================================================
+# BIPANA KHADKA - WEEK 1 + WEEK 2 DMS + INVITES
+# ============================================================
+
+
+async def handle_direct_message(websocket, data, user_id):
+    to_username = data.get("to")
+    content = data.get("content")
+
+    recipient = db.get_user_by_username(to_username)
+
+    if recipient is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    if db.is_blocked(user_id, recipient.id):
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "cannot send message to this user",
+        }))
+        return
+
+    db.save_message(
+        sender_id=user_id,
+        message=content,
+        recipient_id=recipient.id,
+    )
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "message sent",
+    }))
+
+    if recipient.id in connected_clients:
+        sender = db.get_user_by_id(user_id)
+        send_to_client(recipient.id, {
+            "type": "direct_message",
+            "from": sender.username,
+            "content": content,
+            "timestamp": datetime.now().isoformat(),
+        })
+
+
+async def handle_inbox(websocket, user_id):
+    unread = db.get_unread_dms(user_id)
+
+    messages = []
+
+    for row in unread:
+        sender = db.get_user_by_id(row["sender_id"])
+        messages.append({
+            "from": sender.username if sender else "unknown",
+            "content": row["message"],
+        })
+
+    await websocket.send(json.dumps({
+        "type": "inbox_result",
+        "messages": messages,
+    }))
+
+
+async def handle_mark_read(websocket, data, user_id):
+    from_username = data.get("from")
+
+    sender = db.get_user_by_username(from_username)
+
+    if sender is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    db.mark_message_read(user_id, sender.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "messages marked as read",
+    }))
+
+
+async def handle_invite(websocket, data, user_id):
+    room_id = data.get("room_id")
+    username = data.get("username")
+
+    invitee = db.get_user_by_username(username)
+
+    if invitee is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    invited = db.invite_to_room(room_id, user_id, invitee.id)
+
+    if not invited:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "could not invite user to room",
+        }))
+        return
+
+    if invitee.id in connected_clients:
+        room = db.get_room_by_id(room_id)
+        inviter = db.get_user_by_id(user_id)
+        send_to_client(invitee.id, {
+            "type": "invite_received",
+            "room": room.room_name if room else None,
+            "from": inviter.username if inviter else None,
+        })
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "user invited to room",
     }))
