@@ -678,6 +678,7 @@ After all four people have merged their work, verify these flows:
 /create roomname           create a new room
 /invite username           invite someone to your private room
 /inbox                     show unread direct messages
+/markread username         mark all messages from a user as read
 /online                    show online friends
 /addfriend username        send a friend request
 /block username            block a user
