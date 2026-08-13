@@ -382,7 +382,7 @@ DM functions (`save_message`, `get_unread_dms`, `mark_messages_read`) already ex
 `handle_mark_read(websocket, data, user_id)`
 - Read "from" (username) from data
 - Look up the sender with db.get_user_by_username(from)
-- Call db.mark_messages_read(user_id, sender_id)
+- Call db.mark_message_read(user_id, sender_id)
 - Send back success
 
 **Also:** Add routing in handle_message for "direct_message", "inbox", "mark_read".
@@ -650,22 +650,22 @@ docker compose exec -T db psql -U uami -d uamichat_test -f /docker-entrypoint-in
 
 After all four people have merged their work, verify these flows:
 
-- [ ] Register a new user
-- [ ] Login with existing user
-- [ ] Create a public room
-- [ ] Join a public room
-- [ ] List public rooms
-- [ ] Send a message in a room
-- [ ] Send a DM to another user
-- [ ] Check inbox for unread DMs
-- [ ] Mark DMs as read
-- [ ] Send a friend request
-- [ ] Accept a friend request
-- [ ] See online friends
-- [ ] Block a user
-- [ ] Invite someone to a private room
-- [ ] /help shows all commands
-- [ ] /quit disconnects cleanly
+- [x] Register a new user
+- [x] Login with existing user
+- [x] Create a public room
+- [x] Join a public room
+- [x] List public rooms
+- [x] Send a message in a room
+- [x] Send a DM to another user
+- [x] Check inbox for unread DMs
+- [x] Mark DMs as read
+- [x] Send a friend request
+- [x] Accept a friend request
+- [x] See online friends
+- [x] Block a user
+- [x] Invite someone to a private room
+- [x] /help shows all commands
+- [x] /quit disconnects cleanly
 
 ---
 
