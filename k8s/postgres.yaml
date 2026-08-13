@@ -17,6 +17,8 @@ spec:
       - name: postgres
         image: postgres:17-alpine
         env:
+        - name: TZ
+          value: Asia/Kathmandu
         - name: POSTGRES_DB
           value: uamichat
         - name: POSTGRES_USER
