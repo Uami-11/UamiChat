@@ -111,7 +111,7 @@ def get_unread_dms(user_id):
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
     cur.execute(
-        "SELECT m.sender_id, m.message FROM messages m WHERE m.is_read = FALSE AND m.recipient_id = %s",
+        "SELECT m.sender_id, m.message, m.created_at FROM messages m WHERE m.is_read = FALSE AND m.recipient_id = %s",
         (user_id,),
     )
 
