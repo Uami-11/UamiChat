@@ -126,6 +126,32 @@ def parse_input(raw: str) -> dict:
             "username": parts[1]
         }
 
+    # /accept username
+    elif command == "/accept":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /accept username"
+            }
+
+        return {
+            "type": "accept_friend",
+            "username": parts[1]
+        }
+
+    # /decline username
+    elif command == "/decline":
+        if len(parts) < 2:
+            return {
+                "type": "error",
+                "message": "Usage: /decline username"
+            }
+
+        return {
+            "type": "decline_friend",
+            "username": parts[1]
+        }
+
     # /block username
     elif command == "/block":
         if len(parts) < 2:
@@ -175,6 +201,8 @@ def get_command_list() -> list[str]:
         "/markread username       Mark all messages from a user as read",
         "/online                  Show online friends",
         "/addfriend username      Send a friend request",
+        "/accept username         Accept a friend request",
+        "/decline username        Decline a friend request",
         "/block username          Block a user",
         "/help                    Show available commands",
         "/quit                    Exit UamiChat"

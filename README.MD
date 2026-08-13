@@ -229,6 +229,7 @@ All communication is JSON over WebSocket. Every message has a `type` field.
 ```json
 { "type": "add_friend", "username": "username" }
 { "type": "accept_friend", "username": "username" }
+{ "type": "decline_friend", "username": "username" }
 { "type": "online_friends" }
 ```
 
@@ -681,6 +682,8 @@ After all four people have merged their work, verify these flows:
 /markread username         mark all messages from a user as read
 /online                    show online friends
 /addfriend username        send a friend request
+/accept username           accept a friend request
+/decline username          decline a friend request
 /block username            block a user
 /help                      list all available commands
 /quit                      disconnect and exit

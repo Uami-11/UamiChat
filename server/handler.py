@@ -139,6 +139,23 @@ async def handle_message(websocket, raw_message: str):
 
         await handle_accept_friend(websocket, data, user_id)
 
+    elif msg_type == "decline_friend":
+        user_id = None
+
+        for uid, client in connected_clients.items():
+            if client == websocket:
+                user_id = uid
+                break
+
+        if user_id is None:
+            await websocket.send(json.dumps({
+                "type": "error",
+                "message": "not logged in",
+            }))
+            return
+
+        await handle_decline_friend(websocket, data, user_id)
+
     elif msg_type == "online_friends":
         user_id = None
 
@@ -490,6 +507,26 @@ async def handle_accept_friend(websocket, data, user_id):
             "type": "success",
             "message": f"{accepter.username} accepted your friend request",
         })
+
+
+async def handle_decline_friend(websocket, data, user_id):
+    username = data.get("username")
+
+    other = db.get_user_by_username(username)
+
+    if other is None:
+        await websocket.send(json.dumps({
+            "type": "error",
+            "message": "user not found",
+        }))
+        return
+
+    db.decline_friend_request(user_id, other.id)
+
+    await websocket.send(json.dumps({
+        "type": "success",
+        "message": "friend request declined",
+    }))
 
 
 async def handle_online_friends(websocket, user_id):
