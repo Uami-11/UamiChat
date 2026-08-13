@@ -618,6 +618,34 @@ This is the entry point that ties everything together.
 
 ---
 
+## Running Tests
+
+Unit and integration tests live in `tests/` and use `pytest`. One test file per feature.
+
+```bash
+# install test dependencies (includes the regular ones)
+uv pip install -r requirements-dev.txt
+
+# run everything
+pytest
+
+# run a single file
+pytest tests/test_client_week1.py
+```
+
+Handler tests are unit tests that mock the database layer. Tests that touch the database use a dedicated `uamichat_test` database so development data is never polluted. It is created on the docker Postgres once:
+
+```bash
+# create the test database (first time only)
+docker compose exec -T db psql -U uami -d uamichat -c "CREATE DATABASE uamichat_test"
+docker compose exec -T db psql -U uami -d uamichat_test -f /docker-entrypoint-initdb.d/schema.sql
+
+# override the test DB URL if it is not at the default location
+# TEST_DB_URL=postgresql://uami@localhost:5433/uamichat_test pytest
+```
+
+---
+
 ## Testing Checklist
 
 After all four people have merged their work, verify these flows:
