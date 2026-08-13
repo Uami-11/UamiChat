@@ -31,6 +31,11 @@ def with_room_context(result: dict, room) -> dict:
     return result
 
 
+def read_input() -> str:
+    """Read a line from stdin without printing a prompt."""
+    return input("")
+
+
 def prompt_login() -> dict:
     username = Prompt.ask("Username")
     password = Prompt.ask("Password", password=True)
@@ -57,6 +62,8 @@ async def listen(websocket):
         while True:
             message = await connection.receive(websocket)
             msg_type = message.get("type")
+
+            ui.console.print()
 
             if msg_type == "room_message":
                 ui.print_message(
@@ -97,6 +104,8 @@ async def listen(websocket):
                         "id": message["room"].get("id"),
                         "name": message["room"].get("name"),
                     }
+
+            ui.print_prompt()
     except websockets.exceptions.ConnectionClosed:
         ui.print_system("Disconnected from server")
 
@@ -105,7 +114,7 @@ async def input_loop(websocket):
     loop = asyncio.get_event_loop()
 
     while True:
-        raw = await loop.run_in_executor(None, input, "> ")
+        raw = await loop.run_in_executor(None, read_input)
 
         result = commands.parse_input(raw)
         result = with_room_context(result, current_room)
@@ -116,9 +125,11 @@ async def input_loop(websocket):
 
         elif result["type"] == "error":
             ui.print_error(result["message"])
+            ui.print_prompt()
 
         elif result["type"] == "help":
             ui.print_help(commands.get_command_list())
+            ui.print_prompt()
 
         else:
             try:
@@ -126,6 +137,9 @@ async def input_loop(websocket):
             except websockets.exceptions.ConnectionClosed:
                 ui.print_error("Connection lost")
                 break
+
+            if result["type"] == "room_message":
+                ui.print_prompt()
 
 
 async def main():
@@ -166,6 +180,7 @@ async def main():
 
     ui.clear_screen()
     ui.print_system(f"Welcome, {response.get('username')}")
+    ui.print_prompt()
 
     listen_task = asyncio.create_task(listen(websocket))
 

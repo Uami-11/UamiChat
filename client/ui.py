@@ -179,3 +179,11 @@ def clear_screen():
     """
 
     console.clear()
+
+
+def print_prompt():
+    """
+    Display the input prompt without a trailing newline.
+    """
+
+    console.print("> ", end="", highlight=False)
