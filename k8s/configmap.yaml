@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: schema-sql
+  namespace: uamichat
+data:
+  schema.sql: |
+    CREATE TABLE users (
+        id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        is_online BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE rooms (
+        id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        room_name TEXT UNIQUE NOT NULL,
+        is_private BOOLEAN DEFAULT TRUE,
+        owner_id INT REFERENCES users (id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE room_members (
+        room_id INT REFERENCES rooms (id),
+        user_id INT REFERENCES users (id),
+        joined_at TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (room_id, user_id)
+    );
+
+    CREATE TABLE messages (
+        id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        sender_id INT REFERENCES users (id),
+        room_id INT REFERENCES rooms (id),
+        recipient_id INT REFERENCES users (id),
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE friendships (
+        user_id INT REFERENCES users (id),
+        friend_id INT REFERENCES users (id),
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT NOW(),
+        PRIMARY KEY (user_id, friend_id)
+    );

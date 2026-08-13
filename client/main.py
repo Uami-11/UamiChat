@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from client import commands, connection, ui  # noqa: E402
 
-SERVER_URL = os.environ.get("UAMICHAT_SERVER_URL", "ws://localhost:8765")
+SERVER_URL = os.environ.get("UAMICHAT_SERVER_URL", "ws://chat.maharjannirwan.com.np")
 
 current_room = None
 
@@ -189,6 +189,11 @@ async def main():
     finally:
         listen_task.cancel()
         await connection.disconnect(websocket)
+
+
+def run():
+    """Sync entry point for the `uamichat` console script."""
+    asyncio.run(main())
 
 
 if __name__ == "__main__":
