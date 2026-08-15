@@ -180,6 +180,28 @@ def clear_screen():
 
     console.clear()
 
+def input_line_text(draft):
+    """
+    Return the terminal text used to render the current input draft.
+    """
+    return "\r\x1b[2K> " + draft
+
+
+def render_input(draft):
+    """
+    Render the current input draft.
+    """
+    console.file.write(input_line_text(draft))
+    console.file.flush()
+
+
+def erase_line():
+    """
+    Erase the current input line.
+    """
+    console.file.write("\r\x1b[2K")
+    console.file.flush()
+
 
 def print_prompt():
     """

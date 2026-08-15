@@ -8,7 +8,7 @@ from rich.prompt import Prompt
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from client import commands, connection, ui  # noqa: E402
+from client import commands, connection, input_editor, ui  # noqa: E402
 
 SERVER_URL = os.environ.get("UAMICHAT_SERVER_URL", "ws://chat.maharjannirwan.com.np")
 
@@ -32,8 +32,8 @@ def with_room_context(result: dict, room) -> dict:
 
 
 def read_input() -> str:
-    """Read a line from stdin without printing a prompt."""
-    return input("")
+    """Read a line from stdin using the input editor."""
+    return input_editor.read_line()
 
 
 def prompt_login() -> dict:
@@ -62,6 +62,11 @@ async def listen(websocket):
         while True:
             message = await connection.receive(websocket)
             msg_type = message.get("type")
+
+            active, draft = input_editor.input_buffer.snapshot()
+
+            if active:
+                ui.erase_line()
 
             ui.console.print()
 
@@ -105,7 +110,11 @@ async def listen(websocket):
                         "name": message["room"].get("name"),
                     }
 
-            ui.print_prompt()
+            if active:
+                ui.render_input(draft)
+            else:
+                ui.print_prompt()
+
     except websockets.exceptions.ConnectionClosed:
         ui.print_system("Disconnected from server")
 
@@ -114,7 +123,12 @@ async def input_loop(websocket):
     loop = asyncio.get_event_loop()
 
     while True:
-        raw = await loop.run_in_executor(None, read_input)
+        try:
+            raw = await loop.run_in_executor(None, read_input)
+        except (KeyboardInterrupt, EOFError):
+            ui.print_system("Disconnected from server")
+            await connection.disconnect(websocket)
+            break
 
         result = commands.parse_input(raw)
         result = with_room_context(result, current_room)
