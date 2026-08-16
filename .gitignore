@@ -153,6 +153,7 @@ activemq-data/
 .envrc
 .venv
 env/
+uv.lock
 
 # Kubernetes secrets (real values; the example is tracked)
 k8s/secrets.yaml
