@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -178,7 +181,17 @@ def clear_screen():
     Clear the terminal screen.
     """
 
-    console.clear()
+    if not console.is_terminal:
+        console.clear()
+        return
+
+    command = "cls" if os.name == "nt" else "clear"
+
+    try:
+        subprocess.run(command, shell=True, stderr=subprocess.DEVNULL, check=True)
+    except Exception:
+        console.clear()
+
 
 def input_line_text(draft):
     """

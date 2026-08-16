@@ -19,6 +19,22 @@ class InputBuffer:
 input_buffer = InputBuffer()
 
 
+def _delete_last_word(draft):
+    """Remove the trailing word along with any whitespace before it."""
+    end = len(draft)
+
+    while end and draft[end - 1].isspace():
+        end -= 1
+
+    while end and not draft[end - 1].isspace():
+        end -= 1
+
+    while end and draft[end - 1].isspace():
+        end -= 1
+
+    return draft[:end]
+
+
 def apply_key(draft, key):
     """Apply a keyboard input to the current draft."""
     if key in ("\r", "\n"):
@@ -29,6 +45,12 @@ def apply_key(draft, key):
 
     if key in ("\x03", "\x04"):
         return draft
+
+    if key == "\x15":
+        return ""
+
+    if key == "\x17":
+        return _delete_last_word(draft)
 
     if key.startswith("\x1b"):
         return draft
@@ -70,7 +92,7 @@ def _read_windows():
         key = msvcrt.getwch()
 
         if key == "\r":
-            print()
+            sys.stdout.write("\r\n")
             return input_buffer.draft
 
         if key == "\x03":
@@ -105,7 +127,7 @@ def _read_unix():
             key = sys.stdin.read(1)
 
             if key in ("\r", "\n"):
-                print()
+                sys.stdout.write("\r\n")
                 return input_buffer.draft
 
             if key == "\x03":
