@@ -121,7 +121,7 @@ def _read_unix():
     old_settings = termios.tcgetattr(fd)
 
     try:
-        tty.setraw(fd)
+        tty.setcbreak(fd)
 
         while True:
             key = sys.stdin.read(1)
